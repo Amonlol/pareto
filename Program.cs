@@ -6,27 +6,15 @@ namespace Pareto
 {
 	internal class Program
 	{
-		const string PATH = @"C:\Users\Admin\Desktop\Институт\Судаков\pareto\data.csv";
-		static List<Pareto> MyData;
+		public static List<Pareto> MyData;
 
 		static void Main(string[] args)
 		{
-			MyData = new List<Pareto>();
-
-			using (TextFieldParser parser = new TextFieldParser(PATH))
-			{
-				parser.TextFieldType = FieldType.Delimited;
-				parser.SetDelimiters(",");
-				while (!parser.EndOfData)
-				{
-					//Process row
-					string[] fields = parser.ReadFields();
-					MyData.Add(new Pareto(fields));
-				}
-			}
+			Utils.GetData();
 
 			for (int i = 0; i < MyData.Count - 1; i++)
 			{
+				bool next = false;
 				string[] checki = MyData[i].values;
 
 				for (int j = i + 1; j < MyData.Count; j++)
@@ -34,26 +22,34 @@ namespace Pareto
 					string[] checkj = MyData[j].values;
 					int dominate = Utils.WhoIsDominating(checki, checkj);
 
-					if (dominate == 1)
-					{
-						MyData[i].dominate = 1;
-					}
-					else if (dominate == 2)
+					if (dominate == 2)
 					{
 						MyData[i].dominate = 0;
+						next = true;
+						continue;
 					}
+				}
+
+				if (next)
+				{
+					continue;
+				}
+				else
+				{
+					MyData[i].dominate = 1;
 				}
 			}
 
 			for (int i = 0; i < MyData.Count; i++)
 			{
 				StringBuilder sb = new StringBuilder();
-				//Console.WriteLine(String.Format(MyData[i].values.ToString(), MyData[i].dominate));
+
 				for (int j = 0; j < MyData[i].values.Length; j++)
 				{
 					sb.Append(MyData[i].values[j].ToString());
 				}
-				sb.Append(" ").Append(MyData[i].dominate);
+
+				sb.Append(' ').Append(MyData[i].dominate);
 				Console.WriteLine(sb.ToString());
 			}
 		}
@@ -72,6 +68,35 @@ namespace Pareto
 
 	public static class Utils
 	{
+		//Метод загрузки данных множества Парето в кэш
+		public static void GetData()
+		{
+			Program.MyData = new List<Pareto>();
+			Console.WriteLine("Введите путь к файлу data.csv:");
+
+			using (TextFieldParser parser = new TextFieldParser(Console.ReadLine() + @"\data.csv"))
+			{
+				parser.TextFieldType = FieldType.Delimited;
+				parser.SetDelimiters(",");
+
+				while (!parser.EndOfData)
+				{
+					string[] fields = parser.ReadFields();
+					Program.MyData.Add(new Pareto(fields));
+				}
+			}
+		}
+
+		/// <summary>
+		/// Метод проверки доминации двух множеств
+		/// </summary>
+		/// <param name="a">Первое множество</param>
+		/// <param name="b">Второе множество</param>
+		/// <returns>
+		/// 0 - данные множества равны или несовместимы, 
+		/// 1 - первое множество доминирует над вторым, 
+		/// 2 - второе множество доминирует над первым
+		/// </returns>
 		public static int WhoIsDominating(string[] a, string[] b)
 		{
 			int check = 0;
@@ -94,10 +119,8 @@ namespace Pareto
 			{
 				return 2;
 			}
-			else
-			{
-				return 0;
-			}
+
+			return 0;
 		}
 	}
 }
